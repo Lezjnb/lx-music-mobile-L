@@ -10,6 +10,7 @@ import { createStyle } from '@/utils/tools'
 // import { useSettingValue } from '@/store/setting/hook'
 import { useTheme } from '@/store/theme/hook'
 import { useSettingValue } from '@/store/setting/hook'
+import GlassSurface from '@/components/common/GlassSurface'
 
 
 export default memo(({ isHome = false }: { isHome?: boolean }) => {
@@ -17,22 +18,31 @@ export default memo(({ isHome = false }: { isHome?: boolean }) => {
   const { keyboardShown } = useKeyboard()
   const theme = useTheme()
   const autoHidePlayBar = useSettingValue('common.autoHidePlayBar')
+  const style = useSettingValue('common.playBarStyle')
+  const capsuleRadius = useSettingValue('playBar.ui.capsuleRadius')
+  const isCapsule = style == 'capsule'
+  const isFull = style == 'full'
 
   const playerComponent = useMemo(() => (
-    <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
-      <Pic isHome={isHome} />
-      <View style={styles.center}>
-        <Title isHome={isHome} />
-        {/* <View style={{ ...styles.row, justifyContent: 'space-between' }}>
-          <PlayTime />
-        </View> */}
-        <PlayInfo isHome={isHome} />
-      </View>
-      <View style={styles.right}>
-        <ControlBtn />
-      </View>
+    <View style={isCapsule ? styles.capsuleHost : undefined}>
+      <GlassSurface disableShadow={isCapsule} style={[
+        isCapsule
+          ? { ...styles.capsule, borderRadius: capsuleRadius }
+          : styles.container,
+        !isCapsule && { backgroundColor: theme['c-content-background'] },
+        !isCapsule && isFull && styles.full,
+      ]}>
+        <Pic isHome={isHome} />
+        <View style={styles.center}>
+          <Title isHome={isHome} />
+          <PlayInfo isHome={isHome} />
+        </View>
+        <View style={styles.right}>
+          <ControlBtn />
+        </View>
+      </GlassSurface>
     </View>
-  ), [theme, isHome])
+  ), [capsuleRadius, isCapsule, isFull, isHome, theme])
 
   // console.log('render pb')
 
@@ -57,6 +67,27 @@ const styles = createStyle({
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 10,
+  },
+  capsuleHost: {
+    paddingHorizontal: 10,
+    paddingBottom: 8,
+    backgroundColor: 'transparent',
+  },
+  capsule: {
+    width: '100%',
+    paddingVertical: 5,
+    borderRadius: 30,
+    paddingLeft: 10,
+    paddingRight: 10,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    // Android elevation produces a rectangular outline even with a rounded child.
+  },
+  full: {
+    paddingVertical: 9,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
   },
   left: {
     // borderRadius: 3,

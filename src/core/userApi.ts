@@ -1,5 +1,5 @@
 import { action, state } from '@/store/userApi'
-import { addUserApi, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore } from '@/utils/data'
+import { addUserApi, getUserApiScript, removeUserApi as removeUserApiFromStore, setUserApiAllowShowUpdateAlert as setUserApiAllowShowUpdateAlertFromStore, upsertPresetUserApi } from '@/utils/data'
 import { destroy, loadScript } from '@/utils/nativeModules/userApi'
 import { log as writeLog } from '@/utils/log'
 
@@ -30,6 +30,17 @@ export const setUserApiList: typeof action['setUserApiList'] = (list) => {
 export const importUserApi = async(script: string) => {
   const info = await addUserApi(script)
   action.addUserApi(info)
+}
+export const importPresetUserApi = async(script: string, remote: NonNullable<LX.UserApi.UserApiInfo['remote']>) => {
+  const info = await upsertPresetUserApi(script, remote)
+  const index = state.list.findIndex(item => item.id == info.id)
+  if (index < 0) action.addUserApi(info)
+  else {
+    const list = [...state.list]
+    list.splice(index, 1, info)
+    action.setUserApiList(list)
+  }
+  return info
 }
 
 export const removeUserApi = async(ids: string[]) => {

@@ -6,6 +6,29 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [1.8.5](https://github.com/Lezjnb/lx-music-mobile-L/compare/v1.8.4...v1.8.5) - 2026-07-18
+
+## LX Music Mobile-L v1.8.5
+
+### 新增
+
+- AI 歌词翻译：支持多个服务商和模型、语言/自定义语言、缓存、取消、超时，以及追加或覆盖译文
+- AI 译文缓存可按歌曲与歌词内容自动恢复
+- 页面背景设置：支持本地图片、HTTPS 图片、渐变、透明度、多页面应用和实时预览
+- 底部导航、悬浮胶囊播放栏、播放详情外观、歌词配色、当前列表和在线源预设导入
+
+### 优化与修复
+
+- 设置页支持分类折叠、搜索和搜索结果不透明度调节
+- 优化横竖屏播放详情控制布局、圆形封面、转场和当前列表按钮
+- 修复 AI SSE 响应解析、AI 译文重启后未恢复、胶囊矩形阴影、页面背景弹层误关闭及播放详情设置无法操作等问题
+
+### 安装说明
+
+- `arm64-v8a`：适用于绝大多数近年的 Android 手机，推荐下载。
+- `universal`：兼容更多设备架构，但安装包较大。
+- 此版本使用开发签名；若手机已安装不同签名的同包名应用，需要先卸载旧应用后安装，卸载会清除旧应用本地数据。
+
 ## [1.8.4](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.3...v1.8.4) - 2026-05-01
 
 我们很高兴地宣布新项目 Any Listen 的桌面版已发布，目前已支持列表跟随本地文件自动更新、加载并播放WebDAV上的歌曲等功能，更多功能仍在积极开发中，桌面版与Web版将同步更新。

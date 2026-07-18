@@ -1,6 +1,7 @@
 import { View } from 'react-native'
 import Aside from './Aside'
 import PlayerBar from '@/components/player/PlayerBar'
+import BottomNavigation from '../BottomNavigation'
 import StatusBar from '@/components/common/StatusBar'
 import Header from './Header'
 import Main from './Main'
@@ -27,6 +28,7 @@ export default () => {
           <Header />
           <Main />
           <PlayerBar isHome />
+          <BottomNavigation />
         </View>
       </View>
     </>

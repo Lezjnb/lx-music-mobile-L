@@ -11,11 +11,12 @@ import { useBgPic } from '@/store/common/hook'
 
 interface Props {
   children: React.ReactNode
+  overlayOpacity?: number
 }
 
 const BLUR_RADIUS = Math.max(scaleSizeAbsHR(18), 10)
 
-export default ({ children }: Props) => {
+export default ({ children, overlayOpacity = 76 }: Props) => {
   const theme = useTheme()
   const windowSize = useWindowSize()
   const pic = useBgPic()
@@ -61,14 +62,14 @@ export default ({ children }: Props) => {
           resizeMode="cover"
           blurRadius={BLUR_RADIUS}
         >
-          <View style={{ flex: 1, flexDirection: 'column', backgroundColor: theme['c-content-background'], opacity: 0.76 }}></View>
+          <View style={{ flex: 1, flexDirection: 'column', backgroundColor: theme['c-content-background'], opacity: overlayOpacity / 100 }}></View>
         </ImageBackground>
         <View style={{ flex: 1, flexDirection: 'column' }}>
           {children}
         </View>
       </View>
     )
-  }, [children, pic, theme, windowSize.height, windowSize.width])
+  }, [children, overlayOpacity, pic, theme, windowSize.height, windowSize.width])
 
   return (
     <>

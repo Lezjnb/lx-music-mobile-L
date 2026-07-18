@@ -10,6 +10,7 @@ import { createStyle } from '@/utils/tools'
 import PagerView, { type PageScrollStateChangedNativeEvent, type PagerViewOnPageSelectedEvent } from 'react-native-pager-view'
 import { setNavActiveId } from '@/core/common'
 import settingState from '@/store/setting/state'
+import PageBackground from '@/components/PageBackground'
 
 const hideKeys = [
   'list.isShowAlbumName',
@@ -275,19 +276,19 @@ const Main = () => {
       style={styles.pagerView}
     >
       <View collapsable={false} key="nav_search" style={styles.pageStyle}>
-        <SearchPage />
+        <PageBackground page="search"><SearchPage /></PageBackground>
       </View>
       <View collapsable={false} key="nav_songlist" style={styles.pageStyle}>
-        <SongListPage />
+        <PageBackground page="songlist"><SongListPage /></PageBackground>
       </View>
       <View collapsable={false} key="nav_top" style={styles.pageStyle}>
-        <LeaderboardPage />
+        <PageBackground page="leaderboard"><LeaderboardPage /></PageBackground>
       </View>
       <View collapsable={false} key="nav_love" style={styles.pageStyle}>
-        <MylistPage />
+        <PageBackground page="mylist"><MylistPage /></PageBackground>
       </View>
       <View collapsable={false} key="nav_setting" style={styles.pageStyle}>
-        <SettingPage />
+        <PageBackground page="setting"><SettingPage /></PageBackground>
       </View>
       {/* <View collapsable={false} key="nav_search" style={styles.pageStyle}>
         <Search />
@@ -323,4 +324,3 @@ const styles = createStyle({
 
 
 export default Main
-

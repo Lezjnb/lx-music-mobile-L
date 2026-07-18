@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, TouchableOpacity, type ImageSourcePropType } from 'react-native'
 import { setTheme } from '@/core/theme'
 import { useI18n } from '@/lang'
@@ -12,6 +12,8 @@ import { createStyle } from '@/utils/tools'
 import { scaleSizeH } from '@/utils/pixelRatio'
 import { Icon } from '@/components/common/Icon'
 import ImageBackground from '@/components/common/ImageBackground'
+import Popup, { type PopupType } from '@/components/common/Popup'
+import PageBackground from '../Basic/PageBackground'
 
 const useActive = (id: string) => {
   const activeThemeId = useSettingValue('theme.id')
@@ -75,6 +77,7 @@ interface ThemeInfo {
 const initInfo: ThemeInfo = { themes: [], userThemes: [], dataPath: '' }
 export default memo(() => {
   const [showAll, setShowAll] = useState(false)
+  const backgroundPopupRef = useRef<PopupType>(null)
   const t = useI18n()
   const [themeInfo, setThemeInfo] = useState(initInfo)
   const setThemeId = useCallback((id: string) => {
@@ -115,7 +118,14 @@ export default memo(() => {
           })
         }
         <MoreBtn showAll={showAll} setShowAll={setShowAll} />
+        <TouchableOpacity style={styles.addBtn} activeOpacity={0.6} onPress={() => { backgroundPopupRef.current?.setVisible(true) }}>
+          <Text size={25} color={themeInfo.themes[0]?.config.themeColors['c-theme'] ?? undefined}>＋</Text>
+          <Text size={12}>页面背景</Text>
+        </TouchableOpacity>
       </View>
+      <Popup ref={backgroundPopupRef} title="页面背景" position="bottom" minHeight="84%" maxHeight="92%" scrollableContent>
+        <PageBackground />
+      </Popup>
     </SubTitle>
   )
 })
@@ -158,5 +168,11 @@ const styles = createStyle({
     alignItems: 'center',
     // justifyContent: 'center',
     gap: 8,
+  },
+  addBtn: {
+    width: scaleSizeH(ITEM_HEIGHT),
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
   },
 })

@@ -5,6 +5,7 @@ import Mylist from '../Views/Mylist'
 import Leaderboard from '../Views/Leaderboard'
 import Setting from '../Views/Setting'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
+import PageBackground from '@/components/PageBackground'
 
 
 const Main = () => {
@@ -24,12 +25,12 @@ const Main = () => {
 
   const component = useMemo(() => {
     switch (id) {
-      case 'nav_songlist': return <SongList />
-      case 'nav_top': return <Leaderboard />
-      case 'nav_love': return <Mylist />
-      case 'nav_setting': return <Setting />
+      case 'nav_songlist': return <PageBackground page="songlist"><SongList /></PageBackground>
+      case 'nav_top': return <PageBackground page="leaderboard"><Leaderboard /></PageBackground>
+      case 'nav_love': return <PageBackground page="mylist"><Mylist /></PageBackground>
+      case 'nav_setting': return <PageBackground page="setting"><Setting /></PageBackground>
       case 'nav_search':
-      default: return <Search />
+      default: return <PageBackground page="search"><Search /></PageBackground>
     }
   }, [id])
 
@@ -38,4 +39,3 @@ const Main = () => {
 
 
 export default Main
-

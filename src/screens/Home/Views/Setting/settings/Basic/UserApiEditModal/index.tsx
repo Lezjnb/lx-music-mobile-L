@@ -8,6 +8,7 @@ import Dialog, { type DialogType } from '@/components/common/Dialog'
 import Button from '@/components/common/Button'
 import List from './List'
 import ImportBtn from './ImportBtn'
+import PresetImportModal, { type PresetImportModalType } from './PresetImportModal'
 
 // interface UrlInputType {
 //   setText: (text: string) => void
@@ -66,6 +67,7 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
   // const sourceSelectorRef = useRef<SourceSelectorType>(null)
   // const inputRef = useRef<UrlInputType>(null)
   const [visible, setVisible] = useState(false)
+  const presetRef = useRef<PresetImportModalType>(null)
   const theme = useTheme()
   const t = useI18n()
 
@@ -123,7 +125,11 @@ export default forwardRef<UserApiEditModalType, {}>((props, ref) => {
               <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={handleCancel}>
                 <Text size={14} color={theme['c-button-font']}>{t('close')}</Text>
               </Button>
+              <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={() => { presetRef.current?.show() }}>
+                <Text size={14} color={theme['c-button-font']}>在线预设</Text>
+              </Button>
               <ImportBtn btnStyle={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} />
+              <PresetImportModal ref={presetRef} />
             </View>
           </Dialog>
         ) : null
@@ -172,5 +178,4 @@ const styles = createStyle({
     marginRight: 15,
   },
 })
-
 

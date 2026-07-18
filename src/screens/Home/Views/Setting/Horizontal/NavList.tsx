@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 import { View, TouchableOpacity, FlatList, type FlatListProps } from 'react-native'
 
 import { Icon } from '@/components/common/Icon'
@@ -9,11 +9,11 @@ import Text from '@/components/common/Text'
 import { scaleSizeH } from '@/utils/pixelRatio'
 import { SETTING_SCREENS, type SettingScreenIds } from '../Main'
 import { useI18n } from '@/lang'
+import { matchSettingGroups } from '../searchIndex'
 
 type FlatListType = FlatListProps<SettingScreenIds>
 
 const ITEM_HEIGHT = scaleSizeH(40)
-
 const ListItem = memo(({ id, activeId, onPress }: {
   onPress: (item: SettingScreenIds) => void
   activeId: string
@@ -48,11 +48,17 @@ const ListItem = memo(({ id, activeId, onPress }: {
 })
 
 
-export default ({ onChangeId }: {
+export default ({ onChangeId, query = '' }: {
   onChangeId: (id: SettingScreenIds) => void
+  query?: string
 }) => {
   const flatListRef = useRef<FlatList>(null)
   const [activeId, setActiveId] = useState(global.lx.settingActiveId)
+  const t = useI18n()
+  const filtered = useMemo(() => {
+    const text = query.trim().toLocaleLowerCase()
+    return text ? matchSettingGroups(text, id => t(`setting_${id}`)) : SETTING_SCREENS
+  }, [query, t])
 
   const handleChangeId = (id: SettingScreenIds) => {
     onChangeId(id)
@@ -77,7 +83,7 @@ export default ({ onChangeId }: {
     <FlatList
       ref={flatListRef}
       style={styles.container}
-      data={SETTING_SCREENS}
+      data={filtered}
       maxToRenderPerBatch={9}
       // updateCellsBatchingPeriod={80}
       windowSize={9}
@@ -127,4 +133,3 @@ const styles = createStyle({
     // backgroundColor: 'rgba(0,0,0,0.1)',
   },
 })
-

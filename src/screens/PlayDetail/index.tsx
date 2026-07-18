@@ -8,9 +8,12 @@ import PageContent from '@/components/PageContent'
 import StatusBar from '@/components/common/StatusBar'
 import { setComponentId } from '@/core/common'
 import { COMPONENT_IDS } from '@/config/constant'
+import { useSettingValue } from '@/store/setting/hook'
+import PageBackground from '@/components/PageBackground'
 
 export default ({ componentId }: { componentId: string }) => {
   const isHorizontalMode = useHorizontalMode()
+  const backgroundOpacity = useSettingValue('playDetail.ui.backgroundOpacity')
 
   useEffect(() => {
     setComponentId(COMPONENT_IDS.playDetail, componentId)
@@ -18,13 +21,15 @@ export default ({ componentId }: { componentId: string }) => {
   }, [])
 
   return (
-    <PageContent>
-      <StatusBar />
-      {
-        isHorizontalMode
-          ? <Horizontal componentId={componentId} />
-          : <Vertical componentId={componentId} />
-      }
+    <PageContent overlayOpacity={backgroundOpacity}>
+      <PageBackground page="playDetail">
+        <StatusBar />
+        {
+          isHorizontalMode
+            ? <Horizontal componentId={componentId} />
+            : <Vertical componentId={componentId} />
+        }
+      </PageBackground>
     </PageContent>
   )
 }

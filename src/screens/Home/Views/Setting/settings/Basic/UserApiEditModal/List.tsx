@@ -48,11 +48,22 @@ const ListItem = ({ item, activeId, onRemove, onChangeAllowShowUpdateAlert }: {
             ) : null
           }
         </Text>
-        {
-          item.description ? (
-            <Text size={12} color={theme['c-font-label']}>{item.description}</Text>
-          ) : null
-        }
+          {
+            item.description ? (
+              <Text size={12} color={theme['c-font-label']}>{item.description}</Text>
+            ) : null
+          }
+          {
+            item.remote ? (
+              <>
+                <Text size={11} color={theme['c-font-label']} numberOfLines={1}>
+                  在线预设 · {item.remote.importedFrom == 'origin' ? '原始链接' : '加速链接'} · {new Date(item.remote.importedAt).toLocaleDateString()}
+                </Text>
+                <Text size={10} color={theme['c-font-label']} numberOfLines={1}>原始：{item.remote.originUrl}</Text>
+                <Text size={10} color={theme['c-font-label']} numberOfLines={1}>加速：{item.remote.acceleratorUrl}</Text>
+              </>
+            ) : null
+          }
         <CheckBox check={item.allowShowUpdateAlert} label={t('user_api_allow_show_update_alert')} onChange={changeAllowShowUpdateAlert} size={0.86} />
       </View>
       <View style={styles.listItemRight}>
@@ -161,5 +172,3 @@ const styles = createStyle({
     marginBottom: 15,
   },
 })
-
-

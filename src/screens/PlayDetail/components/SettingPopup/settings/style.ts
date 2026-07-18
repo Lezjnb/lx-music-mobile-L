@@ -29,4 +29,14 @@ export default createStyle({
     flexWrap: 'wrap',
     paddingTop: 5,
   },
+  menu: {
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(127,127,127,0.15)',
+  },
+  opacity: {
+    width: '100%',
+    marginTop: 5,
+  },
 })

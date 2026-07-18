@@ -36,6 +36,7 @@ export default ({ isHome }: { isHome: boolean }) => {
   const { maxPlayTimeStr, nowPlayTimeStr, progress, maxPlayTime } = useProgress(autoUpdate)
   const buffered = useBufferProgress()
   const allowProgressBarSeek = useSettingValue('common.allowProgressBarSeek')
+  const showProgress = useSettingValue('playBar.ui.showProgress')
 
   usePageVisible([COMPONENT_IDS.home], useCallback((visible) => {
     if (isHome) setAutoUpdate(visible)
@@ -52,13 +53,13 @@ export default ({ isHome }: { isHome: boolean }) => {
         <Text size={FONT_SIZE} color={theme['c-500']}> / </Text>
         <PlayTimeMax timeStr={maxPlayTimeStr} />
       </View>
-      <View style={[StyleSheet.absoluteFill, stylesRaw.progress]}>
+      {showProgress ? <View style={[StyleSheet.absoluteFill, stylesRaw.progress]}>
         {
           allowProgressBarSeek
             ? <Progress progress={progress} duration={maxPlayTime} buffered={buffered} paddingTop={PADDING_TOP_PROGRESS} />
             : <ProgressPlain progress={progress} duration={maxPlayTime} buffered={buffered} paddingTop={PADDING_TOP_PROGRESS} />
         }
-      </View>
+      </View> : null}
     </View>
   )
 }

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
-import { View } from 'react-native'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Animated, Easing, View } from 'react-native'
 // import { useLayout } from '@/utils/hooks'
 import { createStyle } from '@/utils/tools'
-import { usePlayerMusicInfo } from '@/store/player/hook'
+import { useIsPlay, usePlayerMusicInfo } from '@/store/player/hook'
 import { useWindowSize } from '@/utils/hooks'
 import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import { useNavigationComponentDidAppear } from '@/navigation'
@@ -10,12 +10,18 @@ import { HEADER_HEIGHT } from './components/Header'
 import Image from '@/components/common/Image'
 import { useStatusbarHeight } from '@/store/common/hook'
 import commonState from '@/store/common/state'
+import { useSettingValue } from '@/store/setting/hook'
 
 
 export default ({ componentId }: { componentId: string }) => {
   const musicInfo = usePlayerMusicInfo()
   const { width: winWidth, height: winHeight } = useWindowSize()
   const statusBarHeight = useStatusbarHeight()
+  const isPlay = useIsPlay()
+  const coverShape = useSettingValue('playDetail.ui.coverShape')
+  const coverRadius = useSettingValue('playDetail.ui.coverRadius')
+  const rotateCover = useSettingValue('playDetail.ui.rotateCover')
+  const rotation = useRef(new Animated.Value(0)).current
 
   const [animated, setAnimated] = useState(!!commonState.componentIds.playDetail)
   const [pic, setPic] = useState(musicInfo.pic)
@@ -26,6 +32,20 @@ export default ({ componentId }: { componentId: string }) => {
   useNavigationComponentDidAppear(componentId, () => {
     setAnimated(true)
   })
+  useEffect(() => {
+    if (!rotateCover || !isPlay) {
+      rotation.stopAnimation()
+      return
+    }
+    const animation = Animated.loop(Animated.timing(rotation, {
+      toValue: 1,
+      duration: 18_000,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }))
+    animation.start()
+    return () => { animation.stop() }
+  }, [isPlay, rotateCover, rotation])
   // console.log('render pic')
 
   const style = useMemo(() => {
@@ -33,15 +53,22 @@ export default ({ componentId }: { componentId: string }) => {
     return {
       width: imgWidth,
       height: imgWidth,
-      borderRadius: 2,
+      borderRadius: coverShape == 'circle' ? imgWidth / 2 : coverRadius,
     }
-  }, [statusBarHeight, winHeight, winWidth])
+  }, [coverRadius, coverShape, statusBarHeight, winHeight, winWidth])
 
   return (
     <View style={styles.container}>
-      <View style={{ ...styles.content, elevation: animated ? 3 : 0 }}>
-        <Image url={pic} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic} style={style} />
-      </View>
+      <Animated.View
+        nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic}
+        style={{
+          ...styles.content,
+          ...style,
+          elevation: animated ? 3 : 0,
+          transform: [{ rotate: rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }],
+        }}>
+        <Image url={pic} style={styles.image} />
+      </Animated.View>
     </View>
   )
 }
@@ -55,8 +82,11 @@ const styles = createStyle({
     // backgroundColor: 'rgba(0,0,0,0.1)',
   },
   content: {
-    // elevation: 3,
-    backgroundColor: 'rgba(0,0,0,0)',
-    borderRadius: 4,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
   },
 })

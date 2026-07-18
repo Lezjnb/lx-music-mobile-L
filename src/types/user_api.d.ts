@@ -23,6 +23,13 @@ declare namespace LX {
       homepage: string
       version: string
       sources?: UserApiSources
+      remote?: {
+        catalogId: string
+        originUrl: string
+        acceleratorUrl: string
+        importedFrom: 'origin' | 'accelerator'
+        importedAt: number
+      }
     }
 
     interface UserApiStatus {

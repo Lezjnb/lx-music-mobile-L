@@ -1,6 +1,9 @@
 import { useCallback, useRef, forwardRef, useImperativeHandle, useState } from 'react'
-// import { StyleSheet } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import Input, { type InputType, type InputProps } from '@/components/common/Input'
+import { Icon } from '@/components/common/Icon'
+import { useTheme } from '@/store/theme/hook'
+import { createStyle } from '@/utils/tools'
 
 export interface SearchInputProps {
   onChangeText: (text: string) => void
@@ -17,7 +20,7 @@ export interface SearchInputType {
 }
 
 export default forwardRef<SearchInputType, SearchInputProps>(({ onChangeText, onSubmit, onBlur, onTouchStart }, ref) => {
-  // const theme = useTheme()
+  const theme = useTheme()
   const [text, setText] = useState('')
   const inputRef = useRef<InputType>(null)
 
@@ -52,17 +55,45 @@ export default forwardRef<SearchInputType, SearchInputProps>(({ onChangeText, on
   }, [onSubmit])
 
   return (
-    <Input
-      ref={inputRef}
-      placeholder="Search for something..."
-      value={text}
-      onChangeText={handleChangeText}
-      // style={{ ...styles.input, backgroundColor: theme['c-primary-input-background'] }}
-      onBlur={onBlur}
-      onSubmitEditing={handleSubmit}
-      onClearText={handleClearText}
-      onTouchStart={onTouchStart}
-      clearBtn
-    />
+    <View style={{ ...styles.container, backgroundColor: theme['c-primary-light-100-alpha-300'] }}>
+      <Input
+        ref={inputRef}
+        placeholder="搜索歌曲、歌手或歌单"
+        value={text}
+        onChangeText={handleChangeText}
+        style={styles.input}
+        onBlur={onBlur}
+        onSubmitEditing={handleSubmit}
+        onClearText={handleClearText}
+        onTouchStart={onTouchStart}
+        returnKeyType="search"
+        clearBtn
+      />
+      <TouchableOpacity style={styles.searchBtn} onPress={() => { onSubmit(text) }} activeOpacity={0.6}>
+        <Icon name="search-2" color={theme['c-font-label']} size={17} />
+      </TouchableOpacity>
+    </View>
   )
+})
+
+const styles = createStyle({
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 3,
+    borderRadius: 18,
+    paddingLeft: 5,
+  },
+  input: {
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'transparent',
+  },
+  searchBtn: {
+    width: 38,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })

@@ -20,6 +20,7 @@ import {
   removeTempPlayList,
 } from '@/core/player/tempPlayList'
 import { getMusicUrl, getPicPath, getLyricInfo } from '@/core/music'
+import { restoreAiLyricTranslation } from '@/core/aiLyric'
 import { requestMsg } from '@/utils/message'
 import { getRandom } from '@/utils/common'
 import { filterList } from './utils'
@@ -176,11 +177,13 @@ const handleRestorePlay = async(restorePlayInfo: LX.Player.SavedPlayInfo) => {
     global.app_event.picUpdated()
   })
 
-  void getLyricInfo({ musicInfo }).then((lyricInfo) => {
+  void getLyricInfo({ musicInfo }).then(async(lyricInfo) => {
+    if (musicInfo.id != playMusicInfo.musicInfo?.id) return
+    const tlyric = await restoreAiLyricTranslation(musicInfo.id, lyricInfo.lyric, lyricInfo.tlyric ?? '')
     if (musicInfo.id != playMusicInfo.musicInfo?.id) return
     setMusicInfo({
       lrc: lyricInfo.lyric,
-      tlrc: lyricInfo.tlyric,
+      tlrc: tlyric,
       lxlrc: lyricInfo.lxlyric,
       rlrc: lyricInfo.rlyric,
       rawlrc: lyricInfo.rawlrcInfo.lyric,
@@ -208,11 +211,13 @@ const debouncePlay = debounceBackgroundTimer((musicInfo: LX.Player.PlayMusic) =>
     global.app_event.picUpdated()
   })
 
-  void getLyricInfo({ musicInfo }).then((lyricInfo) => {
+  void getLyricInfo({ musicInfo }).then(async(lyricInfo) => {
+    if (musicInfo.id != playerState.playMusicInfo.musicInfo?.id) return
+    const tlyric = await restoreAiLyricTranslation(musicInfo.id, lyricInfo.lyric, lyricInfo.tlyric ?? '')
     if (musicInfo.id != playerState.playMusicInfo.musicInfo?.id) return
     setMusicInfo({
       lrc: lyricInfo.lyric,
-      tlrc: lyricInfo.tlyric,
+      tlrc: tlyric,
       lxlrc: lyricInfo.lxlyric,
       rlrc: lyricInfo.rlyric,
       rawlrc: lyricInfo.rawlrcInfo.lyric,
@@ -665,4 +670,3 @@ export const dislikeMusic = async() => {
   await addDislikeInfo([{ name: minfo.name, singer: minfo.singer }])
   await playNext(true)
 }
-

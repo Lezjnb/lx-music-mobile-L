@@ -1,5 +1,5 @@
-import { useRef, useImperativeHandle, forwardRef, useCallback } from 'react'
-import { TextInput, View, TouchableOpacity, StyleSheet, type TextInputProps } from 'react-native'
+import { useRef, useImperativeHandle, forwardRef, useCallback, useEffect, useState } from 'react'
+import { TextInput, View, TouchableOpacity, StyleSheet, Animated, type TextInputProps, type ViewProps } from 'react-native'
 import { Icon } from '@/components/common/Icon'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
@@ -48,6 +48,7 @@ export interface InputProps extends TextInputProps {
   onClearText?: () => void
   clearBtn?: boolean
   size?: number
+  containerStyle?: ViewProps['style']
 }
 
 
@@ -58,10 +59,19 @@ export interface InputType {
   isFocused: () => boolean
 }
 
-export default forwardRef<InputType, InputProps>(({ onChangeText, onClearText, clearBtn, style, size = 14, ...props }, ref) => {
+export default forwardRef<InputType, InputProps>(({ onChangeText, onClearText, clearBtn, style, containerStyle, size = 14, onFocus, onBlur, value, ...props }, ref) => {
   const inputRef = useRef<TextInput>(null)
   const theme = useTheme()
-  // const scaleClearBtn = useRef(new Animated.Value(0)).current
+  const clearScale = useRef(new Animated.Value(value ? 1 : 0)).current
+  const [focused, setFocused] = useState(false)
+  const hasText = !!String(value ?? '')
+  useEffect(() => {
+    Animated.timing(clearScale, {
+      toValue: hasText ? 1 : 0,
+      duration: 160,
+      useNativeDriver: true,
+    }).start()
+  }, [clearScale, hasText])
 
   useImperativeHandle(ref, () => ({
     blur() {
@@ -110,23 +120,39 @@ export default forwardRef<InputType, InputProps>(({ onChangeText, onClearText, c
   }, [onChangeText])
 
   return (
-    <View style={styles.content}>
+    <View style={StyleSheet.compose(styles.content, containerStyle)}>
       <TextInput
         autoCapitalize="none"
         onChangeText={changeText}
         autoComplete="off"
-        style={StyleSheet.compose({ ...styles.input, color: theme['c-font'], fontSize: setSpText(size) }, style)}
+        style={StyleSheet.compose({
+          ...styles.input,
+          color: theme['c-font'],
+          fontSize: setSpText(size),
+          borderWidth: focused ? StyleSheet.hairlineWidth : 0,
+          borderColor: theme['c-primary-light-100-alpha-500'],
+        }, style)}
         placeholderTextColor={theme['c-primary-dark-100-alpha-600']}
         selectionColor={theme['c-primary-light-100-alpha-300']}
-        ref={inputRef} {...props} />
+        ref={inputRef}
+        value={value}
+        onFocus={event => {
+          setFocused(true)
+          onFocus?.(event)
+        }}
+        onBlur={event => {
+          setFocused(false)
+          onBlur?.(event)
+        }}
+        {...props} />
       {/* <View style={styles.clearBtnContent}>
       <Animated.View style={{ ...styles.clearBtnContent, transform: [{ scale: scaleClearBtn }] }}> */}
-        {clearBtn
-          ? <View style={styles.clearBtnContent}>
+        {clearBtn && hasText
+          ? <Animated.View style={[styles.clearBtnContent, { transform: [{ scale: clearScale }] }]}>
               <TouchableOpacity style={styles.clearBtn} onPress={clearText}>
                 <Icon name="remove" color={theme['c-primary-dark-100-alpha-500']} size={11} />
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           : null
         }
       {/* </Animated.View>
@@ -134,4 +160,3 @@ export default forwardRef<InputType, InputProps>(({ onChangeText, onClearText, c
     </View>
   )
 })
-

@@ -77,6 +77,28 @@ declare global {
       'common.alwaysKeepStatusbarHeight': boolean
 
       /**
+       * 播放栏样式
+       */
+      'common.playBarStyle': 'mini' | 'full' | 'capsule'
+
+      /**
+       * 在播放栏下方显示首页导航栏
+       */
+      'common.showBottomNavigation': boolean
+
+      /**
+       * 拟态玻璃效果
+       */
+      'ui.glass.enabled': boolean
+      'ui.glass.opacity': number
+      'ui.glass.borderOpacity': number
+      'ui.glass.shadow': number
+      /**
+       * 页面背景配置版本，用于通知各页面刷新背景
+       */
+      'ui.pageBackgroundVersion': number
+
+      /**
        * 主题id
        */
       'theme.id': string
@@ -232,6 +254,36 @@ declare global {
       'playDetail.isShowLyricProgressSetting': boolean
 
       /**
+       * 播放详情封面与转场
+       */
+      'playDetail.ui.coverShape': 'square' | 'circle'
+      'playDetail.ui.coverRadius': number
+      'playDetail.ui.rotateCover': boolean
+      'playDetail.ui.animation': 'shared' | 'slide-right' | 'slide-up' | 'fade'
+      'playDetail.ui.backgroundOpacity': number
+
+      /**
+       * 播放详情页歌词颜色；空字符串表示跟随当前主题默认色
+       */
+      'playDetail.lyric.inactiveColor': string
+      'playDetail.lyric.inactiveTranslationColor': string
+      'playDetail.lyric.activeColor': string
+      'playDetail.lyric.activeTranslationColor': string
+
+      /**
+       * 设置页搜索结果背景不透明度
+       */
+      'ui.settingSearchResultOpacity': number
+
+      /**
+       * 播放栏外观
+       */
+      'playBar.ui.coverShape': 'square' | 'circle'
+      'playBar.ui.rotateCover': boolean
+      'playBar.ui.showProgress': boolean
+      'playBar.ui.capsuleRadius': number
+
+      /**
        * 是否启用桌面歌词
        */
       'desktopLyric.enable': boolean
@@ -358,4 +410,3 @@ declare global {
     }
   }
 }
-

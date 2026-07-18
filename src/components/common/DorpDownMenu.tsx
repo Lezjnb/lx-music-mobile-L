@@ -22,14 +22,25 @@ export default <T extends Menus>({
 }: DorpDownMenuProps<T>) => {
   const buttonRef = useRef<BtnType>(null)
   const menuRef = useRef<MenuType>(null)
+  const positionRef = useRef<{ x: number, y: number, w: number, h: number } | null>(null)
 
   const showMenu = () => {
-    buttonRef.current?.measure((fx, fy, width, height, px, py) => {
-      // console.log(fx, fy, width, height, px, py)
-      menuRef.current?.show({ x: Math.ceil(px), y: Math.ceil(py), w: Math.ceil(width), h: Math.ceil(height) }, {
-        width,
-        height,
+    const show = (position: { x: number, y: number, w: number, h: number }) => {
+      requestAnimationFrame(() => {
+        menuRef.current?.show(position, { width: position.w, height: position.h })
       })
+    }
+    const cachedPosition = positionRef.current
+    if (cachedPosition) show(cachedPosition)
+    buttonRef.current?.measure((fx, fy, width, height, px, py) => {
+      const position = { x: Math.ceil(px), y: Math.ceil(py), w: Math.ceil(width), h: Math.ceil(height) }
+      const changed = !cachedPosition ||
+        position.x != cachedPosition.x ||
+        position.y != cachedPosition.y ||
+        position.w != cachedPosition.w ||
+        position.h != cachedPosition.h
+      positionRef.current = position
+      if (changed) show(position)
     })
   }
 

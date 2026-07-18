@@ -1,7 +1,7 @@
 {
   "name": "lx-music-mobile",
-  "version": "1.8.4",
-  "versionCode": 76,
+  "version": "1.8.5",
+  "versionCode": 77,
   "private": true,
   "scripts": {
     "dev": "react-native run-android --active-arch-only",
@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lyswhut/lx-music-mobile.git"
+    "url": "git+https://github.com/Lezjnb/lx-music-mobile-L.git"
   },
   "keywords": [
     "music-player",
@@ -40,9 +40,9 @@
   },
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/lyswhut/lx-music-mobile/issues"
+    "url": "https://github.com/Lezjnb/lx-music-mobile-L/issues"
   },
-  "homepage": "https://github.com/lyswhut/lx-music-mobile#readme",
+  "homepage": "https://github.com/Lezjnb/lx-music-mobile-L#readme",
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.1.1",
     "@react-native-async-storage/async-storage": "~2.1.2",
@@ -59,11 +59,13 @@
     "react-native-exception-handler": "^2.10.10",
     "react-native-file-system": "github:lyswhut/react-native-file-system#fcb0e6f55af684ac60598c720c77cfe0502f2c65",
     "react-native-fs": "^2.20.0",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-local-media-metadata": "github:lyswhut/react-native-local-media-metadata#1b5be310d112afce0df598d3e9c7521c3311049c",
     "react-native-navigation": "7.39.2",
     "react-native-pager-view": "6.7.1",
     "react-native-quick-base64": "^2.2.2",
     "react-native-quick-md5": "^3.0.9",
+    "react-native-svg": "^15.12.1",
     "react-native-track-player": "github:lyswhut/react-native-track-player#bfe33933793460e7588d4d8f38eddf7910806f29",
     "react-native-vector-icons": "10.2.0"
   },

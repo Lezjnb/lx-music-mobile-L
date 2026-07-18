@@ -66,21 +66,25 @@ const LrcLine = memo(({ line, lineNum, activeLine, onLayout }: LineProps) => {
   const theme = useTheme()
   const lrcFontSize = useSettingValue('playDetail.vertical.style.lrcFontSize')
   const textAlign = useSettingValue('playDetail.style.align')
+  const inactiveColor = useSettingValue('playDetail.lyric.inactiveColor')
+  const inactiveTranslationColor = useSettingValue('playDetail.lyric.inactiveTranslationColor')
+  const activeColor = useSettingValue('playDetail.lyric.activeColor')
+  const activeTranslationColor = useSettingValue('playDetail.lyric.activeTranslationColor')
   const size = lrcFontSize / 10
   const lineHeight = setSpText(size) * 1.3
 
   const colors = useMemo(() => {
     const active = activeLine == lineNum
     return active ? [
-      theme['c-primary'],
-      theme['c-primary-alpha-200'],
+      activeColor || theme['c-primary'],
+      activeTranslationColor || theme['c-primary-alpha-200'],
       1,
     ] as const : [
-      theme['c-350'],
-      theme['c-300'],
+      inactiveColor || theme['c-350'],
+      inactiveTranslationColor || theme['c-300'],
       0.6,
     ] as const
-  }, [activeLine, lineNum, theme])
+  }, [activeColor, activeLine, activeTranslationColor, inactiveColor, inactiveTranslationColor, lineNum, theme])
 
   const handleLayout = ({ nativeEvent }: LayoutChangeEvent) => {
     onLayout(lineNum, nativeEvent.layout.height, nativeEvent.layout.width)
