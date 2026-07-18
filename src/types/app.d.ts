@@ -18,6 +18,8 @@ import type { SettingScreenIds } from '@/screens/Home/Views/Setting'
 interface GlobalData {
   fontSize: number
   gettingUrlId: string
+  playerOperationId: number
+  isPlayerTrackChanging: boolean
 
   // event_app: AppType
   // event_list: ListType

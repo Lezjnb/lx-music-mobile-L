@@ -10,23 +10,24 @@ import { setNowPlayTime } from '@/core/player/progress'
 export default () => {
   let retryNum = 0
   let prevTimeoutId: string | null = null
+  let lastHandledErrorOperation = -1
+  let scheduledNextOperation = -1
 
   let loadingTimeout: number | null = null
   let delayNextTimeout: number | null = null
-  const startLoadingTimeout = () => {
-    // console.log('start load timeout')
+  const isCurrentOperation = (operationId: number, musicId?: string) => {
+    return operationId == global.lx.playerOperationId &&
+      (!musicId || musicId == playerState.playMusicInfo.musicInfo?.id)
+  }
+  const startLoadingTimeout = (operationId: number) => {
     clearLoadingTimeout()
+    const musicId = playerState.playMusicInfo.musicInfo?.id
     loadingTimeout = BackgroundTimer.setTimeout(() => {
-      // if (global.lx.isPlayedStop) {
-      //   prevTimeoutId = null
-      //   setStatusText('')
-      //   return
-      // }
-
-      // 如果加载超时，则尝试刷新URL
+      loadingTimeout = null
+      if (!musicId || global.lx.isPlayedStop || !isCurrentOperation(operationId, musicId)) return
       if (prevTimeoutId == playerState.musicInfo.id) {
         prevTimeoutId = null
-        void playNext(true)
+        schedulePlayNext(operationId, musicId)
       } else {
         prevTimeoutId = playerState.musicInfo.id
         if (playerState.playMusicInfo.musicInfo) setMusicUrl(playerState.playMusicInfo.musicInfo, true)
@@ -46,10 +47,13 @@ export default () => {
     BackgroundTimer.clearTimeout(delayNextTimeout)
     delayNextTimeout = null
   }
-  const addDelayNextTimeout = () => {
+  const schedulePlayNext = (operationId: number, musicId: string) => {
+    if (scheduledNextOperation == operationId) return
+    scheduledNextOperation = operationId
     clearDelayNextTimeout()
     delayNextTimeout = BackgroundTimer.setTimeout(() => {
-      if (global.lx.isPlayedStop) {
+      delayNextTimeout = null
+      if (global.lx.isPlayedStop || !isCurrentOperation(operationId, musicId)) {
         setStatusText('')
         return
       }
@@ -57,10 +61,10 @@ export default () => {
     }, 5000)
   }
 
-  const handleLoadstart = () => {
+  const handleLoadstart = (operationId = global.lx.playerOperationId) => {
     console.log('handleLoadstart', playerState.isPlay)
-    if (global.lx.isPlayedStop || !playerState.isPlay) return
-    startLoadingTimeout()
+    if (global.lx.isPlayedStop || !playerState.isPlay || !isCurrentOperation(operationId)) return
+    startLoadingTimeout(operationId)
     setStatusText(global.i18n.t('player__loading'))
   }
 
@@ -86,8 +90,13 @@ export default () => {
     setStatusText(global.i18n.t('player__buffering'))
   }
 
-  const handleError = () => {
-    if (!playerState.musicInfo.id) return
+  const handleError = (info?: { musicId?: string, operationId?: number, error?: unknown }) => {
+    const operationId = info?.operationId ?? global.lx.playerOperationId
+    const musicId = playerState.playMusicInfo.musicInfo?.id
+    if (!musicId || !isCurrentOperation(operationId, musicId) || (info?.musicId && info.musicId != musicId)) return
+    if (lastHandledErrorOperation == operationId) return
+    lastHandledErrorOperation = operationId
+    console.log('handle player error', { musicId, operationId, error: info?.error })
     clearLoadingTimeout()
     if (global.lx.isPlayedStop) return
     if (playerState.playMusicInfo.musicInfo && retryNum < 2) { // 若音频URL无效则尝试刷新2次URL
@@ -107,16 +116,18 @@ export default () => {
 
     if (isActive()) {
       setStatusText(global.i18n.t('player__error'))
-      setTimeout(addDelayNextTimeout)
+      schedulePlayNext(operationId, musicId)
     } else {
       console.warn('error skip to next')
-      void playNext(true)
+      if (isCurrentOperation(operationId, musicId)) void playNext(true)
     }
   }
 
   const handleSetPlayInfo = () => {
     retryNum = 0
     prevTimeoutId = null
+    lastHandledErrorOperation = -1
+    scheduledNextOperation = -1
     clearDelayNextTimeout()
     clearLoadingTimeout()
   }

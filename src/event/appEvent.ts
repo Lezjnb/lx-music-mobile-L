@@ -102,16 +102,20 @@ export class AppEvent extends Event {
     this.emit('playerEnded')
   }
 
-  playerError() {
-    this.emit('playerError')
+  playerError(info?: {
+    musicId?: string
+    operationId?: number
+    error?: unknown
+  }) {
+    this.emit('playerError', info)
   }
 
   // playerLoadeddata() {
   //   this.emit('playerLoadeddata')
   // }
 
-  playerLoadstart() {
-    this.emit('playerLoadstart')
+  playerLoadstart(operationId?: number) {
+    this.emit('playerLoadstart', operationId)
   }
 
   // playerCanplay() {

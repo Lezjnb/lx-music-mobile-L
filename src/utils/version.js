@@ -1,8 +1,9 @@
 import { httpGet } from '@/utils/request'
-import { author, name } from '../../package.json'
 import { downloadFile, stopDownload, temporaryDirectoryPath } from '@/utils/fs'
 import { getSupportedAbis, installApk } from '@/utils/nativeModules/utils'
 import { APP_PROVIDER_NAME } from '@/config/constant'
+
+const releaseApiUrl = 'https://api.github.com/repos/Lezjnb/lx-music-mobile-L/releases?per_page=30'
 
 const abis = [
   'arm64-v8a',
@@ -11,18 +12,6 @@ const abis = [
   'x86',
   'universal',
 ]
-
-const address = [
-  [`https://raw.githubusercontent.com/${author.name}/${name}/master/publish/version.json`, 'direct'],
-  ['https://registry.npmjs.org/lx-music-mobile-version-info/latest', 'npm'],
-  [`https://cdn.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  [`https://fastly.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  [`https://gcore.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  ['https://registry.npmmirror.com/lx-music-mobile-version-info/latest', 'npm'],
-  ['https://gitee.com/lyswhut/lx-music-mobile-versions/raw/master/version.json', 'direct'],
-  ['http://cdn.stsky.cn/lx-music/mobile/version.json', 'direct'],
-]
-
 
 const request = async(url, retryNum = 0) => {
   return new Promise((resolve, reject) => {
@@ -38,39 +27,32 @@ const request = async(url, retryNum = 0) => {
   })
 }
 
-const getDirectInfo = async(url) => {
-  return request(url).then(info => {
-    if (info.version == null) throw new Error('failed')
-    return info
-  })
+const getStableReleases = async() => {
+  const releases = await request(releaseApiUrl)
+  if (!Array.isArray(releases)) throw new Error('invalid GitHub release response')
+  return releases.filter(release => !release.draft && !release.prerelease && typeof release.tag_name == 'string')
 }
 
-const getNpmPkgInfo = async(url) => {
-  return request(url).then(json => {
-    if (!json.versionInfo) throw new Error('failed')
-    const info = JSON.parse(json.versionInfo)
-    if (info.version == null) throw new Error('failed')
-    return info
-  })
+const getReleaseVersion = (release) => release.tag_name.replace(/^v/i, '')
+
+let releasesPromise = null
+const loadReleases = (force = false) => {
+  if (force || !releasesPromise) releasesPromise = getStableReleases()
+  return releasesPromise
 }
 
-export const getVersionInfo = async(index = 0) => {
-  const [url, source] = address[index]
-  let promise
-  switch (source) {
-    case 'direct':
-      promise = getDirectInfo(url)
-      break
-    case 'npm':
-      promise = getNpmPkgInfo(url)
-      break
+export const getVersionInfo = async() => {
+  const releases = await loadReleases(true)
+  const latest = releases[0]
+  if (!latest) throw new Error('release not found')
+  return {
+    version: getReleaseVersion(latest),
+    desc: latest.body || latest.name || '',
+    history: releases.slice(1).map(release => ({
+      version: getReleaseVersion(release),
+      desc: release.body || release.name || '',
+    })),
   }
-
-  return promise.catch(async(err) => {
-    index++
-    if (index >= address.length) throw err
-    return getVersionInfo(index)
-  })
 }
 
 const getTargetAbi = async() => {
@@ -86,7 +68,15 @@ let apkSavePath
 
 export const downloadNewVersion = async(version, onDownload = noop) => {
   const abi = await getTargetAbi()
-  const url = `https://github.com/${author.name}/${name}/releases/download/v${version}/${name}-v${version}-${abi}.apk`
+  const releases = await loadReleases()
+  const release = releases.find(item => getReleaseVersion(item) == version)
+  if (!release) throw new Error(`release v${version} not found`)
+  const assets = Array.isArray(release.assets) ? release.assets : []
+  const asset = assets.find(item => item.name?.endsWith(`-${abi}.apk`)) ??
+    assets.find(item => item.name?.endsWith('-universal.apk')) ??
+    assets.find(item => item.name?.endsWith('.apk'))
+  if (!asset?.browser_download_url) throw new Error(`APK asset for ${abi} not found`)
+  const url = asset.browser_download_url
   let savePath = temporaryDirectoryPath + '/lx-music-mobile.apk'
 
   if (downloadJobId) stopDownload(downloadJobId)

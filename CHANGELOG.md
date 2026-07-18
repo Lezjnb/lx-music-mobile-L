@@ -6,6 +6,28 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [1.8.7](https://github.com/Lezjnb/lx-music-mobile-L/compare/v1.8.6...v1.8.7) - 2026-07-18
+
+## LX Music-L v1.8.7
+
+### 品牌与项目
+
+- 应用名称与“关于”页更新为 LX Music-L
+- 关于页顶部展示 LX Music-L 的项目地址、Release 与 Issue；原项目资料、文档、协议和作者致谢移动至下方
+- 软件更新检查、更新说明和 APK 下载全部使用 Lezjnb/lx-music-mobile-L 的 GitHub Release
+
+### 修复
+
+- 移除首次许可协议的强制倒计时，可直接接受或拒绝
+- 修复主动换歌时内部占位轨道被误判为播放结束，导致自动暂停、重试或切下一首的问题
+- 修复部分 OPPO 设备启用 Audio Offload 后播放 MP3 出现 `AudioTrack write failed: -6`、反复重建音轨和自动切歌的问题；现默认关闭该不稳定路径，并自动修正历史设置
+
+### 安装说明
+
+- `arm64-v8a`：适用于绝大多数近年的 Android 手机，推荐下载。
+- `universal`：兼容更多设备架构，但安装包较大。
+- 此版本使用开发签名；若手机已安装不同签名的同包名应用，需要先卸载旧应用后安装，卸载会清除旧应用本地数据。
+
 ## [1.8.6](https://github.com/Lezjnb/lx-music-mobile-L/compare/v1.8.5...v1.8.6) - 2026-07-18
 
 ## LX Music Mobile-L v1.8.6

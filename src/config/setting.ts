@@ -103,6 +103,15 @@ export const initSetting = async() => {
     }
   }
 
+  // 部分 Android 设备的 Audio Offload 会导致 AudioTrack write failed: -6，
+  // 进而重复暂停、重试和切歌。统一关闭并覆盖历史的开启配置。
+  if (setting?.['player.isEnableAudioOffload']) {
+    setting = {
+      ...setting,
+      'player.isEnableAudioOffload': false,
+    }
+  }
+
   // console.log(setting)
   const updatedSetting = updateSetting(setting, true)
   void saveData(storageDataPrefix.setting, updatedSetting.setting)

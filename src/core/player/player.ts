@@ -24,41 +24,12 @@ import { restoreAiLyricTranslation } from '@/core/aiLyric'
 import { requestMsg } from '@/utils/message'
 import { getRandom } from '@/utils/common'
 import { filterList } from './utils'
-import BackgroundTimer from 'react-native-background-timer'
 import { checkIgnoringBatteryOptimization, checkNotificationPermission, debounceBackgroundTimer } from '@/utils/tools'
 import { LIST_IDS } from '@/config/constant'
 import { addListMusics, removeListMusics } from '@/core/list'
 import { addDislikeInfo } from '@/core/dislikeList'
 
 // import { checkMusicFileAvailable } from '@renderer/utils/music'
-
-const createDelayNextTimeout = (delay: number) => {
-  let timeout: number | null
-  const clearDelayNextTimeout = () => {
-    // console.log(this.timeout)
-    if (timeout) {
-      BackgroundTimer.clearTimeout(timeout)
-      timeout = null
-    }
-  }
-
-  const addDelayNextTimeout = () => {
-    clearDelayNextTimeout()
-    timeout = BackgroundTimer.setTimeout(() => {
-      timeout = null
-      if (global.lx.isPlayedStop) return
-      console.log('delay next timeout timeout', delay)
-      void playNext(true)
-    }, delay)
-  }
-
-  return {
-    clearDelayNextTimeout,
-    addDelayNextTimeout,
-  }
-}
-const { addDelayNextTimeout, clearDelayNextTimeout } = createDelayNextTimeout(5000)
-const { addDelayNextTimeout: addLoadTimeout, clearDelayNextTimeout: clearLoadTimeout } = createDelayNextTimeout(100000)
 
 const createGettingUrlId = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem) => {
   const tInfo = 'progress' in musicInfo ? musicInfo.metadata.musicInfo.meta.toggleMusicInfo : musicInfo.meta.toggleMusicInfo
@@ -97,8 +68,6 @@ const delayRetry = async(musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, i
 const getMusicPlayUrl = async(musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, isRefresh = false, isRetryed = false): Promise<string | null> => {
   // this.musicInfo.url = await getMusicPlayUrl(targetSong, type)
   setStatusText(global.i18n.t('player__getting_url'))
-  addLoadTimeout()
-
   // const type = getPlayType(settingState.setting['player.isPlayHighQuality'], musicInfo)
   let toggleMusicInfo = ('progress' in musicInfo ? musicInfo.metadata.musicInfo : musicInfo).meta.toggleMusicInfo
 
@@ -134,22 +103,25 @@ const getMusicPlayUrl = async(musicInfo: LX.Music.MusicInfo | LX.Download.ListIt
 }
 
 export const setMusicUrl = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, isRefresh?: boolean) => {
-  // addLoadTimeout()
   if (!diffCurrentMusicInfo(musicInfo)) return
   if (cancelDelayRetry) cancelDelayRetry()
+  const operationId = ++global.lx.playerOperationId
+  global.lx.isPlayerTrackChanging = true
   global.lx.gettingUrlId = createGettingUrlId(musicInfo)
   void getMusicPlayUrl(musicInfo, isRefresh).then((url) => {
-    if (!url) return
+    if (!url || operationId != global.lx.playerOperationId) return
     setResource(musicInfo, url, playerState.progress.nowPlayTime)
   }).catch((err: any) => {
     console.log(err)
     setStatusText(err.message as string)
-    global.app_event.error()
-    addDelayNextTimeout()
+    global.app_event.playerError({
+      musicId: musicInfo.id,
+      operationId,
+      error: err,
+    })
   }).finally(() => {
-    if (musicInfo === playerState.playMusicInfo.musicInfo) {
+    if (operationId == global.lx.playerOperationId && musicInfo === playerState.playMusicInfo.musicInfo) {
       global.lx.gettingUrlId = ''
-      clearLoadTimeout()
     }
   })
 }
@@ -240,12 +212,13 @@ const handlePlay = async() => {
       playRate: settingState.setting['player.playbackRate'],
       cacheSize: settingState.setting['player.cacheSize'] ? parseInt(settingState.setting['player.cacheSize']) : 0,
       isHandleAudioFocus: settingState.setting['player.isHandleAudioFocus'],
-      isEnableAudioOffload: settingState.setting['player.isEnableAudioOffload'],
     })
   }
 
   global.lx.isPlayedStop &&= false
   resetRandomNextMusicInfo()
+  global.lx.isPlayerTrackChanging = true
+  global.lx.playerOperationId++
 
   if (global.lx.restorePlayInfo) {
     void handleRestorePlay(global.lx.restorePlayInfo)
@@ -260,10 +233,6 @@ const handlePlay = async() => {
 
   await setStop()
   global.app_event.pause()
-
-  clearDelayNextTimeout()
-  clearLoadTimeout()
-
 
   if (settingState.setting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay) addPlayedList(playMusicInfo as LX.Player.PlayMusicInfo)
 

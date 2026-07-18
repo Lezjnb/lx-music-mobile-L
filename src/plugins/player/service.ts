@@ -5,7 +5,7 @@ import TrackPlayer, { State as TPState, Event as TPEvent } from 'react-native-tr
 import { isTempId, isEmpty } from './utils'
 // import { play as lrcPlay, pause as lrcPause } from '@/core/lyric'
 import { exitApp } from '@/core/common'
-import { getCurrentTrackId } from './playList'
+import { getCurrentTrack, getCurrentTrackId } from './playList'
 import { pause, play, playNext, playPrev } from '@/core/player/player'
 
 let isInitialized = false
@@ -68,8 +68,12 @@ const registerPlaybackService = async() => {
 
   TrackPlayer.addEventListener(TPEvent.PlaybackError, async(err: any) => {
     console.log('playback-error', err)
-    global.app_event.error()
-    global.app_event.playerError()
+    const track = await getCurrentTrack()
+    global.app_event.playerError({
+      musicId: track?.musicId,
+      operationId: global.lx.playerOperationId,
+      error: err,
+    })
   })
 
   TrackPlayer.addEventListener(TPEvent.RemoteSeek, async({ position }) => {
@@ -87,10 +91,12 @@ const registerPlaybackService = async() => {
       case TPState.Ready:
       case TPState.Stopped:
       case TPState.Paused:
+        if (global.lx.isPlayerTrackChanging || global.lx.gettingUrlId) break
         global.app_event.playerPause()
         global.app_event.pause()
         break
       case TPState.Playing:
+        global.lx.isPlayerTrackChanging = false
         global.app_event.playerPlaying()
         global.app_event.play()
         break
@@ -99,7 +105,7 @@ const registerPlaybackService = async() => {
         global.app_event.playerWaiting()
         break
       case TPState.Connecting:
-        global.app_event.playerLoadstart()
+        global.app_event.playerLoadstart(global.lx.playerOperationId)
         break
       default:
         // console.log('playback-state', info)
@@ -118,6 +124,11 @@ const registerPlaybackService = async() => {
 
     // console.log('global.lx.playerTrackId====>', global.lx.playerTrackId)
     if (isEmpty()) {
+      if (global.lx.isPlayerTrackChanging || global.lx.gettingUrlId) {
+        console.log('ignore placeholder track during controlled change', global.lx.playerOperationId)
+        global.app_event.playerEmptied()
+        return
+      }
       // console.log('====TEMP PAUSE====')
       await TrackPlayer.pause()
       global.app_event.playerPause()

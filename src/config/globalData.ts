@@ -50,6 +50,8 @@ global.lx = {
   playerTrackId: '',
 
   gettingUrlId: '',
+  playerOperationId: 0,
+  isPlayerTrackChanging: false,
 
   qualityList: {},
   apis: {},
