@@ -41,6 +41,11 @@ export const removeTheme = async(id: string) => {
   await saveUserTheme(userThemes)
 }
 
+export const replaceUserThemes = async(themes: LX.Theme[]) => {
+  userThemes = themes
+  await saveUserTheme(userThemes)
+}
+
 export type LocalTheme = typeof themes[number]
 type ColorsKey = keyof LX.Theme['config']['themeColors']
 type ExtInfoKey = keyof LX.Theme['config']['extInfo']

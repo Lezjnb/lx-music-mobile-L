@@ -159,6 +159,15 @@ export const aiLyricStore = {
     await save(store)
     if (data.secrets) await saveSecrets(data.secrets)
   },
+  async replaceData(value: string) {
+    const data = JSON.parse(value) as Partial<{ providers: AiProvider[], secrets: AiSecrets, preferences: AiLyricPreferences }>
+    if (data.providers != null && !Array.isArray(data.providers)) throw new Error('AI 翻译配置格式无效')
+    const store = await load()
+    store.providers = data.providers ?? []
+    store.preferences = { ...defaultPreferences(), ...(data.preferences ?? {}) }
+    await save(store)
+    await saveSecrets(data.secrets ?? {})
+  },
   cacheKey(input: Omit<AiLyricCache, 'key' | 'createdAt' | 'lyric'>) {
     return hash([input.songId, input.lyricHash, input.sourceLanguage, input.targetLanguage, input.providerId, input.model].join('|'))
   },

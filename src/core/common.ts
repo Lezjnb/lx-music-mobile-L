@@ -1,7 +1,7 @@
 import { hideDesktopLyric } from './desktopLyric'
 import { exitApp as utilExitApp } from '@/utils/nativeModules/utils'
 import { destroy as destroyPlayer } from '@/plugins/player/utils'
-import { initSetting as initAppSetting } from '@/config/setting'
+import { initSetting as initAppSetting, updateSetting as buildSetting } from '@/config/setting'
 import { setLanguage as applyLanguage } from '@/lang/i18n'
 
 import settingActions from '@/store/setting/action'
@@ -38,6 +38,18 @@ export const initSetting = async() => {
 export const updateSetting = (setting: Partial<LX.AppSetting>) => {
   settingActions.updateSetting(setting)
   throttleSaveSetting()
+}
+
+/**
+ * 用完整备份替换现有设置，并广播所有配置变更以刷新运行中的界面和播放器。
+ */
+export const replaceSetting = async(setting: Partial<LX.AppSetting>) => {
+  const nextSetting = buildSetting(setting, true).setting
+  settingActions.initSetting(nextSetting)
+  await saveData(storageDataPrefix.setting, nextSetting)
+  const keys = Object.keys(nextSetting) as Array<keyof LX.AppSetting>
+  global.state_event.configUpdated(keys, nextSetting)
+  return nextSetting
 }
 
 export const setLanguage = (locale: Parameters<typeof applyLanguage>[0]) => {

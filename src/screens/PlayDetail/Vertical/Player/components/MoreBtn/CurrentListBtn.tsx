@@ -9,7 +9,8 @@ import { playList } from '@/core/player/player'
 import playerState from '@/store/player/state'
 import { createStyle } from '@/utils/tools'
 import { useHorizontalMode } from '@/utils/hooks'
-import { scaleSizeW } from '@/utils/pixelRatio'
+import { scaleSizeH, scaleSizeW } from '@/utils/pixelRatio'
+import { HEADER_HEIGHT } from '@/config/constant'
 
 export interface CurrentListBtnType {
   show: () => void
@@ -29,11 +30,11 @@ export default forwardRef<CurrentListBtnType>((props, ref) => {
   }
   useImperativeHandle(ref, () => ({ show }))
   const listId = playerState.playInfo.playerListId
-  const buttonSize = scaleSizeW(horizontal ? 32 : 36)
-  const iconSize = horizontal ? 12 : 14
+  const buttonSize = horizontal ? scaleSizeW(HEADER_HEIGHT) : scaleSizeH(HEADER_HEIGHT)
+  const iconSize = horizontal ? 20 : 18
   return (
     <>
-      <TouchableOpacity style={{ ...styles.button, width: buttonSize, height: buttonSize, marginLeft: horizontal ? 0 : 5, marginBottom: horizontal ? 5 : 0 }} activeOpacity={0.5} onPress={show}>
+      <TouchableOpacity style={{ ...styles.button, width: buttonSize, height: buttonSize }} activeOpacity={0.5} onPress={show}>
         <PlaylistIcon size={iconSize} color={theme['c-font-label']} />
       </TouchableOpacity>
       {visible ? <Popup ref={popupRef} title={`当前列表（${list.length}）`} position="bottom" onHide={() => { setVisible(false) }}>

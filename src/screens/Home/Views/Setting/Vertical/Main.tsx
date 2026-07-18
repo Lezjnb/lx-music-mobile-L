@@ -7,6 +7,7 @@ import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
 import { useSettingValue } from '@/store/setting/hook'
 import { createStyle } from '@/utils/tools'
+import { useWindowSize } from '@/utils/hooks'
 import Basic from '../settings/Basic'
 import Appearance from '../settings/Appearance'
 import Player from '../settings/Player'
@@ -67,11 +68,13 @@ export default () => {
   const t = useI18n()
   const theme = useTheme()
   const searchResultOpacity = useSettingValue('ui.settingSearchResultOpacity') / 100
+  const windowSize = useWindowSize()
   const listRef = useRef<FlatList<SettingScreenIds>>(null)
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<SettingScreenIds[]>([])
   const normalized = query.trim().toLocaleLowerCase()
   const matchedGroups = useMemo(() => matchSettingGroups(query, id => t(`setting_${id}`)), [query, t])
+  const resultHeight = Math.min(Math.max(150, windowSize.height - 98), matchedGroups.length * 46)
 
   const toggle = (id: SettingScreenIds) => {
     setExpanded(list => list.includes(id) ? list.filter(item => item != id) : [...list, id])
@@ -116,7 +119,7 @@ export default () => {
         </View>
         {normalized ? (
           matchedGroups.length ? (
-            <ScrollView style={[styles.results, { backgroundColor: withOpacity(theme['c-content-background'], searchResultOpacity) }]} contentContainerStyle={styles.resultContent} nestedScrollEnabled keyboardShouldPersistTaps="always">
+            <ScrollView style={[styles.results, { height: resultHeight, backgroundColor: withOpacity(theme['c-content-background'], searchResultOpacity) }]} contentContainerStyle={styles.resultContent} nestedScrollEnabled keyboardShouldPersistTaps="always">
               {matchedGroups.map(id => <TouchableOpacity key={id} style={[styles.result, { borderColor: theme['c-border-background'] }]} onPress={() => { selectResult(id) }}><Text>{t(`setting_${id}`)}</Text><Icon name="chevron-right" size={11} color={theme['c-font-label']} /></TouchableOpacity>)}
             </ScrollView>
           ) : <Text style={[styles.empty, { backgroundColor: withOpacity(theme['c-content-background'], searchResultOpacity) }]} color="gray">没有匹配的设置项</Text>
@@ -130,7 +133,7 @@ const styles = createStyle({
   container: { flex: 1 },
   content: { padding: 15, paddingBottom: 30 },
   listTopSpace: { height: 54 },
-  searchOverlay: { position: 'absolute', top: 15, left: 15, right: 15, zIndex: 10 },
+  searchOverlay: { position: 'absolute', top: 15, left: 15, right: 15, zIndex: 20, elevation: 20 },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -146,8 +149,8 @@ const styles = createStyle({
   header: { minHeight: 48, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1 },
   title: { flex: 1 },
   body: { paddingTop: 8, paddingBottom: 6 },
-  empty: { textAlign: 'center', paddingVertical: 18, borderRadius: 7, backgroundColor: 'rgba(127,127,127,0.10)' },
-  results: { maxHeight: 260, borderRadius: 7, marginBottom: 8 },
+  empty: { position: 'absolute', top: 46, left: 0, right: 0, textAlign: 'center', paddingVertical: 18, borderRadius: 7, backgroundColor: 'rgba(127,127,127,0.10)', elevation: 20 },
+  results: { position: 'absolute', top: 46, left: 0, right: 0, borderRadius: 7, elevation: 20 },
   resultContent: {},
   result: { minHeight: 46, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: 'rgba(127,127,127,0.15)' },
 })

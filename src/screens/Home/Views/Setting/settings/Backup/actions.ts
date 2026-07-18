@@ -1,9 +1,23 @@
-import { LIST_IDS } from '@/config/constant'
+import { LIST_IDS, storageDataPrefix } from '@/config/constant'
 import { createList, getListMusics, overwriteList, overwriteListFull, overwriteListMusics } from '@/core/list'
+import { replaceSetting } from '@/core/common'
+import { applyTheme } from '@/core/theme'
+import { setApiSource } from '@/core/apiSource'
+import { hideDesktopLyric, showDesktopLyric, showRemoteLyric } from '@/core/desktopLyric'
+import { toggleRoma, toggleTranslation } from '@/core/lyric'
+import { setUserApiList } from '@/core/userApi'
 import { filterMusicList, fixNewMusicInfoQuality, toNewMusicInfo } from '@/utils'
 import { log } from '@/utils/log'
 import { confirmDialog, handleReadFile, handleSaveFile, showImportTip, toast } from '@/utils/tools'
 import listState from '@/store/list/state'
+import { getUserApiList, getUserApiScript, getUserTheme } from '@/utils/data'
+import { removeDataMultiple, saveDataMultiple } from '@/plugins/storage'
+import { aiLyricStore } from '@/plugins/aiLyric'
+import { exportPageBackgrounds, replacePageBackgrounds } from '@/plugins/pageBackground'
+import { getTheme, replaceUserThemes } from '@/theme/themes'
+import settingState from '@/store/setting/state'
+import { setLanguage as applyLanguage } from '@/lang/i18n'
+import { setPlaybackRate, setVolume } from '@/plugins/player'
 
 
 const getAllLists = async() => {
@@ -204,5 +218,107 @@ export const handleExportList = (path: string) => {
   }).catch((err: any) => {
     log.error(err.message)
     toast(global.i18n.t('setting_backup_part_export_list_tip_failed') + ': ' + (err.message as string))
+  })
+}
+
+interface SettingsBackup {
+  type: 'setting_v3'
+  version: 3
+  setting: Partial<LX.AppSetting>
+  themes: LX.Theme[]
+  userApis: Array<{ info: LX.UserApi.UserApiInfo, script: string }>
+  ai: unknown
+  pageBackgrounds: unknown
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> => !!value && typeof value == 'object' && !Array.isArray(value)
+const isSettingsBackup = (value: unknown): value is SettingsBackup => {
+  if (!isRecord(value) || value.type != 'setting_v3' || value.version != 3) return false
+  return isRecord(value.setting) && Array.isArray(value.themes) && Array.isArray(value.userApis)
+}
+const cloneThemeForBackup = (theme: LX.Theme): LX.Theme => {
+  const copy = JSON.parse(JSON.stringify(theme)) as LX.Theme
+  const image = copy.config.extInfo['bg-image']
+  if (image && !/^https:\/\//iu.test(image)) copy.config.extInfo['bg-image'] = ''
+  return copy
+}
+const getSettingsBackup = async(): Promise<SettingsBackup> => {
+  const userApis = await getUserApiList()
+  const [themes, scripts, ai, pageBackgrounds] = await Promise.all([
+    getUserTheme(),
+    Promise.all(userApis.map(async info => ({ info, script: await getUserApiScript(info.id) }))),
+    aiLyricStore.exportData(false),
+    exportPageBackgrounds(),
+  ])
+  return {
+    type: 'setting_v3',
+    version: 3,
+    setting: { ...settingState.setting },
+    themes: themes.map(cloneThemeForBackup),
+    userApis: scripts,
+    ai: JSON.parse(ai),
+    pageBackgrounds,
+  }
+}
+const replaceUserApis = async(userApis: SettingsBackup['userApis']) => {
+  const current = await getUserApiList()
+  await removeDataMultiple(current.map(info => `${storageDataPrefix.userApi}${info.id}`))
+  const next = userApis
+    .filter((item): item is SettingsBackup['userApis'][number] => isRecord(item) && isRecord(item.info) && typeof item.info.id == 'string' && typeof item.script == 'string')
+    .map(item => ({ info: item.info, script: item.script }))
+  await saveDataMultiple([
+    [storageDataPrefix.userApi, next.map(item => item.info)],
+    ...next.map(item => [`${storageDataPrefix.userApi}${item.info.id}`, item.script] as [string, string]),
+  ])
+  setUserApiList(await getUserApiList())
+}
+const importSettingsData = async(path: string) => {
+  const data = await handleReadFile<unknown>(path)
+  if (!isSettingsBackup(data)) throw new Error(global.i18n.t('setting_backup_setting_invalid'))
+  const confirm = await confirmDialog({
+    message: global.i18n.t('setting_backup_setting_import_warning'),
+    cancelButtonText: global.i18n.t('dialog_cancel'),
+    confirmButtonText: global.i18n.t('confirm_button_text'),
+    bgClose: false,
+  })
+  if (!confirm) return true
+
+  const setting = await replaceSetting(data.setting)
+  await Promise.all([
+    replaceUserThemes(data.themes.map(cloneThemeForBackup)),
+    replaceUserApis(data.userApis),
+    aiLyricStore.replaceData(JSON.stringify(data.ai)),
+    replacePageBackgrounds(data.pageBackgrounds),
+  ])
+  applyTheme(await getTheme())
+  if (setting['common.langId'] && global.i18n.availableLocales.includes(setting['common.langId'])) applyLanguage(setting['common.langId'])
+  await Promise.all([
+    setPlaybackRate(setting['player.playbackRate']),
+    setVolume(setting['player.volume']),
+    toggleTranslation(setting['player.isShowLyricTranslation']),
+    toggleRoma(setting['player.isShowLyricRoma']),
+  ])
+  void (setting['desktopLyric.enable'] ? showDesktopLyric() : hideDesktopLyric()).catch(() => {})
+  void showRemoteLyric(setting['player.isShowBluetoothLyric']).catch(() => {})
+  setApiSource(setting['common.apiSource'])
+  toast(global.i18n.t('setting_backup_setting_import_success'))
+  return false
+}
+const exportSettingsData = async(path: string) => {
+  await handleSaveFile(path + '/lx_settings_v3.lxmc', await getSettingsBackup())
+}
+export const handleImportSettings = (path: string) => {
+  toast(global.i18n.t('setting_backup_part_import_list_tip_unzip'))
+  void importSettingsData(path).catch(err => {
+    log.error(err)
+    toast(global.i18n.t('setting_backup_setting_import_error') + ': ' + (err.message as string))
+  })
+}
+export const handleExportSettings = (path: string) => {
+  void exportSettingsData(path).then(() => {
+    toast(global.i18n.t('setting_backup_setting_export_success'))
+  }).catch(err => {
+    log.error(err)
+    toast(global.i18n.t('setting_backup_setting_export_error') + ': ' + (err.message as string))
   })
 }

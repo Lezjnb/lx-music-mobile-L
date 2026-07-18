@@ -6,6 +6,28 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [1.8.6](https://github.com/Lezjnb/lx-music-mobile-L/compare/v1.8.5...v1.8.6) - 2026-07-18
+
+## LX Music Mobile-L v1.8.6
+
+### 新增
+
+- 新增完整设置导入/导出：包含常规设置、自定义主题、在线源与脚本、AI 服务商/模型/API Key，以及页面背景的渐变与 HTTPS 图片配置
+- 页面背景的本地图片不导出，导入到新设备后会自动回退主题背景，避免失效文件路径
+
+### 优化与修复
+
+- 设置搜索结果改为独立可滚动浮层，修复小屏或弹出键盘时下拉结果被裁切的问题
+- 播放详情的当前播放列表替换为新版图标，并统一横竖屏下与相邻按钮的尺寸和对齐
+- 修复 Hermes 下 `global.base64FromArrayBuffer is not a function` 启动错误；网易源、同步加密与 Buffer 现在可使用纯 JS Base64 回退正常运行
+- 设置导入会整体覆盖本机设置，并在导入前提示备份文件可能包含明文 AI API Key
+
+### 安装说明
+
+- `arm64-v8a`：适用于绝大多数近年的 Android 手机，推荐下载。
+- `universal`：兼容更多设备架构，但安装包较大。
+- 此版本使用开发签名；若手机已安装不同签名的同包名应用，需要先卸载旧应用后安装，卸载会清除旧应用本地数据。
+
 ## [1.8.5](https://github.com/Lezjnb/lx-music-mobile-L/compare/v1.8.4...v1.8.5) - 2026-07-18
 
 ## LX Music Mobile-L v1.8.5
